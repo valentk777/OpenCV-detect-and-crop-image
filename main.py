@@ -15,8 +15,11 @@ def resize_card(_image):
     width = int(_image.shape[1] * scale_percent / 100)
     height = int(_image.shape[0] * scale_percent / 100)
     dim = (width, height)
-    resized = cv.resize(_image, dim, interpolation=cv.INTER_AREA)
-    return resized
+    return cv.resize(_image, dim, interpolation=cv.INTER_AREA)
+
+
+def is_a_shape_of_expected_card_size(w):
+    return 490 < w < 500
 
 
 def detected_cards_generator(_image):
@@ -29,17 +32,20 @@ def detected_cards_generator(_image):
         x1, y1 = cnt[0][0]
         approx = cv.approxPolyDP(cnt, 0.01 * cv.arcLength(cnt, True), True)
 
-        if len(approx) == 4:
-            x, y, w, h = cv.boundingRect(cnt)
+        if len(approx) != 4:
+            continue
 
-            if 490 < w < 500:
-                out = img[y:y + h, x:x + w]
-                # show_image(out)
+        x, y, w, h = cv.boundingRect(cnt)
 
-                yield out
+        if not is_a_shape_of_expected_card_size(w):
+            continue
 
-                cv.putText(img, 'Rectangle', (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-                img = cv.drawContours(img, [cnt], -1, (0, 255, 0), 3)
+        actual_card = img[y:y + h, x:x + w]
+        yield actual_card
+
+        # additionally pain rectangle on original image to manually check if all rectangles detected.
+        cv.putText(img, 'Rectangle', (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        img = cv.drawContours(img, [cnt], -1, (0, 255, 0), 3)
 
 
 def save_image(_image, name=""):

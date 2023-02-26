@@ -1,4 +1,4 @@
 .idea/
 __pycache__/
-cards/
-cropped/
+_cards/
+_cropped/
